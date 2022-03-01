@@ -10,6 +10,19 @@ A package manager for Til
 * git
 * **ldc2**
 
+## Installation
+
+1. Clone this repository anywhere you prefer.
+1. Create a symbolic link somewhere in your `PATH`.
+
+```bash
+cd ~/bin
+ln -s ~/repos/til-pkg/til-pkg til
+```
+
+(I suggest you call it `til`, since you'll be using `til <command>`
+a lot.)
+
 ## Usage
 
 ### TIL_ROOT
