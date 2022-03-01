@@ -139,8 +139,6 @@ elif [[ $ACTION == "install_til" ]];then
 
 elif [[ $2 == "" ]];then
     usage
-
-else
-    (cd $TIL_ROOT && run $*)
 fi
 
+(cd $TIL_ROOT && run $*)
