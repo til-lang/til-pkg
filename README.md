@@ -8,7 +8,7 @@ A package manager for Til
 * shell utils (sort, sed, cut)
 * make
 * git
-* ldc2
+* **ldc2**
 
 ## Usage
 
