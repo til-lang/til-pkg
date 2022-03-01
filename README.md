@@ -12,6 +12,17 @@ A package manager for Til
 
 ## Usage
 
+### TIL_ROOT
+
+You must export a `TIL_ROOT` environment variable, that's where your Til
+installation and modules will live.
+
+You can add this line to your `~/.bashrc`, `~/.zshrc` or equivalent:
+
+```bash
+export TIL_ROOT=$HOME/til
+```
+
 ### Install Til in your system
 
 ```bash
