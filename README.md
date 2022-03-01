@@ -61,7 +61,21 @@ If you want to upgrade to a specific version:
 $ ./til-pkg install http 0.1.2
 ```
 
-# Distributing your Til package
+## Running Til
+
+### REPL
+
+```bash
+$ ./til-pkg run
+```
+
+### Loading a file
+
+```bash
+$ ./til-pkg run myscript.til
+```
+
+## Distributing your Til package
 
 Having a **git repository** that can be cloned by your users using `git
 clone` command is enough to distribute your Til packages (no need to
