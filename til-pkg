@@ -1,0 +1,145 @@
+#!/bin/bash
+
+set -e
+
+function log {
+    echo $* >&2
+}
+
+function usage {
+    log "Usage: $(basename $0) [install_til|install|remove|update] [package_git_url|package_name]"
+    exit 2
+}
+
+if [[ $TIL_ROOT == "" ]];then
+    log "You must set TIL_ROOT environment variable"
+    exit 1
+fi
+
+if [[ $1 == "" ]];then
+    usage
+else
+    ACTION=$1
+fi
+
+function til_version {
+    (
+        cd repos/til
+        VERSION=$(git describe --tags | cut -f1 -d'-')
+        # v0.20.5 -> v0.20
+        echo $VERSION | cut -f-2 -d'.'
+    )
+}
+
+function run {
+    case $ACTION in
+        install_til)
+            [ -d repos/til ] && rm -rf repos/til
+            git clone "https://github.com/til-lang/til.git" repos/til
+
+            (cd repos/til && make til.release)
+
+            [ -d bin ] || mkdir bin
+            cp repos/til/til.release bin/til
+            [ -d lib ] || mkdir lib
+            cp repos/til/dist/lib*.so lib
+
+            log "Done: installed Til in $PWD/bin/til"
+        ;;
+
+        install)
+            [ -d repos ] || mkdir repos
+            [ -d modules ] || mkdir modules
+
+            TIL_VERSION=$(til_version)
+
+            URL=$2
+            if ! echo $URL | grep -q "/";then
+                # http -> GITHUB/til-http.git
+                URL="https://github.com/til-lang/til-$URL.git"
+            fi
+            NAME=$(basename "$URL" | sed 's:\.git$::g;s:/til-::g;s:^til-::g')
+            VERSION=$3  # Optional
+
+            [ -d repos/$NAME ] && rm -rf repos/$NAME
+            git clone "$URL" repos/$NAME
+
+            ln -s $PWD/repos/til $PWD/repos/$NAME/til
+
+            (
+                cd repos/$NAME
+                if [[ $VERSION == "" ]];then
+                    # Latest tagged version ("vX.Y.Z") compatible
+                    # with current Til's version:
+                    VERSION=$(git tag | grep $TIL_VERSION | sort -rV | head -1)
+                    if [[ $VERSION == "" ]];then
+                        log "No version compatible with current Til's version ($TIL_VERSION.x) found."
+                        exit 4
+                    fi
+                else
+                    VERSION="v$VERSION"
+                fi
+                git checkout tags/$VERSION
+                make
+            )
+            cp repos/$NAME/dist/libtil_*.so modules/
+            log "Done"
+        ;;
+
+    remove)
+        NAME=$2
+        FILEPATH="modules/libtil_$NAME.so"
+        if [ -f $FILEPATH ];then
+            rm $FILEPATH
+            log "Package $NAME removed"
+        else
+            log "Package $NAME not found"
+        fi
+        ;;
+
+    update)
+        NAME=$2
+        if [ ! -d repos/$NAME ];then
+            log "Repository for $NAME not found"
+            exit 3
+        fi
+
+        (
+            cd repos/$NAME
+            git fetch
+            VERSION=$(git describe --tags | cut -f1 -d'-')
+            # v0.20.7 -> v0.20
+            V=$(echo $VERSION | cut -f-2 -d'.')
+            NEXT=$(git tag | grep "$V" | sort -rV | head -1)
+            if [[ $NEXT != $VERSION ]];then
+                log "Updating from $VERSION to $NEXT..."
+                git checkout tags/$NEXT
+                make clean
+                make
+            else
+                log "No new releases after $VERSION"
+            fi
+        )
+        cp -u repos/$NAME/dist/libtil_*.so modules/
+        log "Done"
+        ;;
+
+    esac
+}
+
+if [[ $ACTION == "run" ]];then
+    export TIL_PATH=$TIL_ROOT/modules
+    export LD_LIBRARY_PATH=$TIL_ROOT/lib
+    shift 1
+    exec $TIL_ROOT/bin/til $*
+
+elif [[ $ACTION == "install_til" ]];then
+    :  # pass
+
+elif [[ $2 == "" ]];then
+    usage
+
+else
+    (cd $TIL_ROOT && run $*)
+fi
+
