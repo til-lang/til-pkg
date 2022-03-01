@@ -20,7 +20,7 @@ $ ./til-pkg install_til
 
 ### Install an "official" package
 
-Example: installing `til-http`:
+Example: installing the `http` package:
 
 ```bash
 $ ./til-pkg install http
@@ -38,11 +38,14 @@ $ ./til-pkg install http 0.1.2
 $ ./til-pkg install https://git.sr.ht/til-mypackage
 ```
 
-### Update a package minor version
+### Update a package
 
 ```bash
 $ ./til-pkg update mypackage
 ```
+
+(It's going to use the next version **compatible with your current Til's
+version**, of course.)
 
 ### Upgrade a package
 
