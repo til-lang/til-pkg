@@ -22,6 +22,12 @@ else
     ACTION=$1
 fi
 
+if [ -d $TIL_ROOT/modules ];then
+    [ -d $TIL_ROOT/packages ] || mkdir $TIL_ROOT/packages
+    mv $TIL_ROOT/modules/* $TIL_ROOT/packages/
+    rmdir $TIL_ROOT/modules
+fi
+
 function til_version {
     (
         cd repos/til
@@ -49,7 +55,7 @@ function run {
 
         install)
             [ -d repos ] || mkdir repos
-            [ -d modules ] || mkdir modules
+            [ -d packages ] || mkdir packages
 
             TIL_VERSION=$(til_version)
 
@@ -83,13 +89,13 @@ function run {
                 git checkout tags/$VERSION
                 make
             )
-            cp repos/$NAME/dist/libtil_*.so modules/
+            cp repos/$NAME/dist/libtil_*.so packages/
             log "Done"
         ;;
 
     remove)
         NAME=$2
-        FILEPATH="modules/libtil_$NAME.so"
+        FILEPATH="packages/libtil_$NAME.so"
         if [ -f $FILEPATH ];then
             rm $FILEPATH
             log "Package $NAME removed"
@@ -121,7 +127,7 @@ function run {
                 log "No new releases after $VERSION"
             fi
         )
-        cp -u repos/$NAME/dist/libtil_*.so modules/
+        cp -u repos/$NAME/dist/libtil_*.so packages/
         log "Done"
         ;;
 
@@ -129,7 +135,7 @@ function run {
 }
 
 if [[ $ACTION == "run" ]];then
-    export TIL_PATH=$TIL_ROOT/modules
+    export TIL_PATH=$TIL_ROOT/packages
     export LD_LIBRARY_PATH=$TIL_ROOT/lib
     shift 1
     exec $TIL_ROOT/bin/til $*
