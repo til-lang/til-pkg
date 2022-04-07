@@ -135,7 +135,7 @@ function run {
 }
 
 if [[ $ACTION == "run" ]];then
-    export TIL_PATH=$TIL_ROOT/packages
+    export TIL_PATH="$TIL_PATH:$TIL_ROOT/packages"
     export LD_LIBRARY_PATH=$TIL_ROOT/lib
     shift 1
     exec $TIL_ROOT/bin/til $*
