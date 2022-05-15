@@ -7,7 +7,8 @@ function log {
 }
 
 function usage {
-    log "Usage: $(basename $0) [install_til|install|remove|update] [package_git_url|package_name]"
+    log "Usage: $(basename $0) install_til|run|debug|pkgtest"
+    log "   or: $(basename $0) install|remove|update package_git_url|package_name"
     exit 2
 }
 
@@ -39,20 +40,6 @@ function til_version {
 
 function run {
     case $ACTION in
-        install_til)
-            [ -d repos/til ] && rm -rf repos/til
-            git clone "https://github.com/til-lang/til.git" repos/til
-
-            (cd repos/til && make til.release)
-
-            [ -d bin ] || mkdir bin
-            cp repos/til/til.release bin/til
-            [ -d lib ] || mkdir lib
-            cp repos/til/dist/lib*.so lib
-
-            log "Done: installed Til in $PWD/bin/til"
-        ;;
-
         install)
             [ -d repos ] || mkdir repos
             [ -d packages ] || mkdir packages
@@ -134,17 +121,45 @@ function run {
     esac
 }
 
-if [[ $ACTION == "run" ]];then
-    export TIL_PATH="$TIL_PATH:$TIL_ROOT/packages"
-    export LD_LIBRARY_PATH=$TIL_ROOT/lib
-    shift 1
-    exec $TIL_ROOT/bin/til $*
+# Subcommands that can work without any argument:
+case $ACTION in
+    run)
+        export TIL_PATH="$TIL_PATH:$TIL_ROOT/packages"
+        export LD_LIBRARY_PATH="$TIL_ROOT/lib"
+        shift 1
+        exec $TIL_ROOT/bin/til $*
+        ;;
+    debug)
+        export TIL_PATH="$TIL_PATH:$TIL_ROOT/packages"
+        export LD_LIBRARY_PATH="$TIL_ROOT/repos/til/dist"
+        shift 1
+        exec $TIL_ROOT/repos/til/til.debug $*
+        ;;
+    install_til)
+        [ -d repos/til ] && rm -rf repos/til
+        git clone "https://github.com/til-lang/til.git" repos/til
 
-elif [[ $ACTION == "install_til" ]];then
-    :  # pass
+        (cd repos/til && make til.release)
 
-elif [[ $2 == "" ]];then
-    usage
-fi
+        [ -d bin ] || mkdir bin
+        cp repos/til/til.release bin/til
+        [ -d lib ] || mkdir lib
+        cp repos/til/dist/lib*.so lib
 
-(cd $TIL_ROOT && run $*)
+        log "Done: installed Til in $PWD/bin/til"
+        ;;
+    pkgtest)
+        export TIL_PATH="$PWD/dist:$TIL_PATH:$TIL_ROOT/packages"
+        export LD_LIBRARY_PATH="$TIL_ROOT/lib"
+        shift 1
+        exec $TIL_ROOT/bin/til test.til
+        ;;
+    *)
+        # Subcommands that must receive an argument:
+        if [[ $2 == "" ]];then
+            usage
+        else
+            (cd $TIL_ROOT && run $*)
+        fi
+        ;;
+esac
