@@ -136,6 +136,7 @@ case $ACTION in
         exec $TIL_ROOT/repos/til/til.debug $*
         ;;
     install_til)
+        cd $TIL_ROOT
         [ -d repos/til ] && rm -rf repos/til
         git clone "https://github.com/til-lang/til.git" repos/til
 
