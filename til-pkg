@@ -76,7 +76,8 @@ function run {
                 git checkout tags/$VERSION
                 make
             )
-            cp repos/$NAME/dist/libtil_*.so packages/
+            cp repos/$NAME/dist/libtil_*.so packages/ || echo "No .so files to copy"
+            cp repos/$NAME/dist/*.til packages/ || echo "No .til files to copy"
             log "Done"
         ;;
 
