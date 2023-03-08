@@ -15,6 +15,10 @@ function usage {
 if [[ $TIL_ROOT == "" ]];then
     log "You must set TIL_ROOT environment variable"
     exit 1
+elif [ -f $TIL_ROOT ];then
+    log "TIL_ROOT cannot point to a file"
+else
+    [ -d $TIL_ROOT ] || mkdir -p $TIL_ROOT
 fi
 
 if [[ $1 == "" ]];then
@@ -122,6 +126,10 @@ function run {
     esac
 }
 
+if [[ $ENV_FILE != "" ]];then
+    source $ENV_FILE
+fi
+
 # Subcommands that can work without any argument:
 case $ACTION in
     run)
@@ -154,7 +162,7 @@ case $ACTION in
         export TIL_PATH="$PWD/dist:$TIL_PATH:$TIL_ROOT/packages"
         export LD_LIBRARY_PATH="$TIL_ROOT/lib"
         shift 1
-        exec $TIL_ROOT/bin/til test.til
+        $TIL_ROOT/bin/til test.til || echo "ERROR: $?" >&2
         ;;
     *)
         # Subcommands that must receive an argument:
